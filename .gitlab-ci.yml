@@ -1,0 +1,49 @@
+stages:
+  - test
+  - cleanup
+  - build
+  - deploy
+
+variables:
+  CADDY_IMAGE_NAME: registry.gitlab.com/nikita-sandbox/caddy:master
+  FINAL_API_IMAGE_NAME: $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_NAME
+
+Run Tests:
+  stage: test
+  tags:
+    - go
+  script:
+    - CGO_ENABLED=0 /usr/local/go/bin/go test -v ./...
+
+Cleanup Unused Docker Images:
+  stage: cleanup
+  tags:
+    - docker
+  script:
+    - docker image prune -f
+
+Build Docker:
+  stage: build
+  tags:
+    - docker
+  before_script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_JOB_TOKEN $CI_REGISTRY
+  script:
+    - FINAL_API_IMAGE_NAME=$FINAL_API_IMAGE_NAME docker-compose build
+    - docker push $FINAL_API_IMAGE_NAME
+
+Deploy to Prod:
+  stage: deploy
+  only:
+    - master
+  tags:
+    - deploy
+  before_script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_JOB_TOKEN $CI_REGISTRY
+  script:
+    - docker pull $FINAL_API_IMAGE_NAME
+    - docker pull $CADDY_IMAGE_NAME
+    - FINAL_API_IMAGE_NAME=$FINAL_API_IMAGE_NAME CADDY_IMAGE_NAME=$CADDY_IMAGE_NAME docker-compose up --remove-orphans -d api
+    # Reload caddy's config file and gracefully restart caddy
+    - docker kill --signal="USR1" caddy
+    - docker image prune -f

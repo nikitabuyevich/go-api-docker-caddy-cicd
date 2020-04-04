@@ -1,0 +1,23 @@
+hello.nikitabuyevich.com {
+    gzip
+    # Proxy onto docker container name
+    proxy / go-docker-api:3000 {
+      transparent
+    }
+}
+
+:2015 {
+    gzip
+    # Proxy onto docker container name
+    proxy / go-docker-api:3000 {
+      transparent
+    }
+}
+
+:2016 {
+    gzip
+    # Proxy onto docker container name
+    proxy / go-docker-api:3001 {
+      transparent
+    }
+}

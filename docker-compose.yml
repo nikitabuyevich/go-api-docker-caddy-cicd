@@ -1,0 +1,25 @@
+version: "3"
+services:
+  api:
+    image: "${FINAL_API_IMAGE_NAME:-go-docker}"
+    container_name: go-docker-api
+    restart: always
+    build: ./
+    volumes:
+      - ./database:/database
+    depends_on:
+      - caddy
+
+  caddy:
+    image: "${CADDY_IMAGE_NAME:-caddy}"
+    command: ["-email", "nikita.buyevich@gmail.com", "-agree"]
+    container_name: caddy
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+      - "2015:2015"
+      - "2016:2016"
+    volumes:
+      - ./Caddyfile:/etc/Caddyfile
+      - /home/gitlab-runner/caddy/.caddy:/root/.caddy
