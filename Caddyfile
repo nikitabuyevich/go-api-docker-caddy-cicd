@@ -1,9 +1,25 @@
+auga.nikitabuyevich.com {
+  gzip
+  # Proxy onto docker container name
+  proxy / go-docker-api:3000 {
+    transparent
+  }
+
+  tls {
+    dns cloudflare
+  }
+}
+
 hello.nikitabuyevich.com {
-    gzip
-    # Proxy onto docker container name
-    proxy / go-docker-api:3000 {
-      transparent
-    }
+  gzip
+  # Proxy onto docker container name
+  proxy / go-docker-api:3000 {
+    transparent
+  }
+
+  tls {
+    dns cloudflare
+  }
 }
 
 :2015 {

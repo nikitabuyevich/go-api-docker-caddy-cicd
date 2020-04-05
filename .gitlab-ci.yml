@@ -43,7 +43,12 @@ Deploy to Prod:
   script:
     - docker pull $FINAL_API_IMAGE_NAME
     - docker pull $CADDY_IMAGE_NAME
-    - FINAL_API_IMAGE_NAME=$FINAL_API_IMAGE_NAME CADDY_IMAGE_NAME=$CADDY_IMAGE_NAME docker-compose up --remove-orphans -d api
+    - FINAL_API_IMAGE_NAME=$FINAL_API_IMAGE_NAME
+      CADDY_IMAGE_NAME=$CADDY_IMAGE_NAME
+      CLOUDFLARE_API_KEY=$CLOUDFLARE_API_KEY
+      docker-compose up
+      --remove-orphans
+      -d api
     # Reload caddy's config file and gracefully restart caddy
     - docker kill --signal="USR1" caddy
     - docker image prune -f

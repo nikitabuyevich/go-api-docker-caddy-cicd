@@ -23,3 +23,6 @@ services:
     volumes:
       - ./Caddyfile:/etc/Caddyfile
       - /home/gitlab-runner/caddy/.caddy:/root/.caddy
+    environment:
+      - CLOUDFLARE_EMAIL=nikita.buyevich@gmail.com
+      - CLOUDFLARE_API_KEY=${CLOUDFLARE_API_KEY}
