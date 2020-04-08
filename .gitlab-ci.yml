@@ -1,4 +1,5 @@
 stages:
+  - lint
   - test
   - cleanup
   - build
@@ -8,11 +9,22 @@ variables:
   CADDY_IMAGE_NAME: registry.gitlab.com/nikita-sandbox/caddy:master
   FINAL_API_IMAGE_NAME: $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_NAME
 
+Run Lint:
+  stage: lint
+  tags:
+    - go
+  script:
+    # Install golint
+    - /usr/local/go/bin/go get -u golang.org/x/lint/golint
+    # Run golint
+    - /home/gitlab-runner/go/bin/golint -set_exit_status ./...
+
 Run Tests:
   stage: test
   tags:
     - go
   script:
+    # Run tests
     - CGO_ENABLED=0 /usr/local/go/bin/go test -v ./...
 
 Cleanup Unused Docker Images:
@@ -20,6 +32,7 @@ Cleanup Unused Docker Images:
   tags:
     - docker
   script:
+    # Remove unused images
     - docker image prune -f
 
 Build Docker:
@@ -29,7 +42,9 @@ Build Docker:
   before_script:
     - docker login -u $CI_REGISTRY_USER -p $CI_JOB_TOKEN $CI_REGISTRY
   script:
+    # Build API image
     - FINAL_API_IMAGE_NAME=$FINAL_API_IMAGE_NAME docker-compose build
+    # Push API image
     - docker push $FINAL_API_IMAGE_NAME
 
 Deploy to Prod:
@@ -41,8 +56,11 @@ Deploy to Prod:
   before_script:
     - docker login -u $CI_REGISTRY_USER -p $CI_JOB_TOKEN $CI_REGISTRY
   script:
+    # Pull API image
     - docker pull $FINAL_API_IMAGE_NAME
+    # Pull Caddy image
     - docker pull $CADDY_IMAGE_NAME
+    # Start API
     - FINAL_API_IMAGE_NAME=$FINAL_API_IMAGE_NAME
       CADDY_IMAGE_NAME=$CADDY_IMAGE_NAME
       CLOUDFLARE_API_KEY=$CLOUDFLARE_API_KEY
@@ -51,4 +69,5 @@ Deploy to Prod:
       -d api
     # Reload caddy's config file and gracefully restart caddy
     - docker kill --signal="USR1" caddy
+    # Remove unused images
     - docker image prune -f
